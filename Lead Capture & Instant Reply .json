@@ -1,0 +1,308 @@
+{
+  "name": "Lead Capture & Instant Reply",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-capture",
+        "options": {}
+      },
+      "id": "2e96f383-6c26-488d-b1f0-70dda7a7c919",
+      "name": "Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "a2ee17d7-3a88-4a16-96d6-236bd83abe86"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = ($json.body && typeof $json.body === 'object') ? $json.body : $json;\nconst name = (b.name || b.fullName || b.full_name || '').toString().trim() || 'there';\nconst email = (b.email || b.emailAddress || b.email_address || '').toString().trim();\nconst phone = (b.phone || b.phoneNumber || b.phone_number || b.mobile || '').toString().trim();\nconst message = (b.message || b.inquiry || b.enquiry || b.question || b.comments || '').toString().trim();\nconst contact = email || phone || '';\nreturn [{ json: { name, email, phone, contact, message, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "58c27ea7-14da-4785-9b27-8103b41906a4",
+      "name": "Normalize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1ufyjBFwK5jwQaUbOlcE9ebdQvHviW_yojo9nAQoxTgU",
+          "cachedResultName": "LEADS"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "contact",
+              "displayName": "contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {
+          "handlingExtraData": "insertInNewColumn"
+        }
+      },
+      "id": "0be517ba-c77f-406f-9885-3aeab98adc87",
+      "name": "Log Lead to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TeNhL7vLs8QoCi02",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "husnainfareed45@gmail.com",
+        "subject": "=New lead captured: {{ $(\"Normalize Lead\").item.json.name }} - {{ $(\"Normalize Lead\").item.json.contact }}",
+        "emailType": "text",
+        "message": "=New lead captured: {{ $(\"Normalize Lead\").item.json.name }} - {{ $(\"Normalize Lead\").item.json.contact }}\n\nMessage: {{ $(\"Normalize Lead\").item.json.message }}",
+        "options": {}
+      },
+      "id": "3451ba65-06b0-4e9e-acda-3fad2f202112",
+      "name": "Notify Me",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        112
+      ],
+      "webhookId": "d6a3a97e-71a4-422a-9daa-61a20e7f344d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "R6iIQupLf3UJYXUO",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A new lead named {{ $(\"Normalize Lead\").item.json.name }} submitted this inquiry:\n\n\"{{ $(\"Normalize Lead\").item.json.message }}\"\n\nWrite a short, warm, personalized reply acknowledging their specific inquiry.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a friendly, human-sounding customer support teammate. Write a short (2-4 sentence) reply that feels warm and personal, never robotic or templated. Greet the person by their first name, acknowledge their specific inquiry, and reassure them that a team member will follow up shortly. Do not use placeholders, brackets, or a subject line — output only the email body text."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "a5262598-993d-4333-b380-7be6f4679a33",
+      "name": "Generate Reply",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        896,
+        112
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Normalize Lead\").item.json.email }}",
+        "subject": "=Thanks for reaching out, {{ $(\"Normalize Lead\").item.json.name }}!",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "id": "3a3d68cb-e605-41fe-949a-dcfa1dce906b",
+      "name": "Send Auto-Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        112
+      ],
+      "webhookId": "22d311bf-f719-4c4c-90bf-59c1b0b269e2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "R6iIQupLf3UJYXUO",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        320
+      ],
+      "id": "31d97670-99e9-4799-8d80-cc7537adb5e0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kjooYKgtKiBPzuVM",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead": {
+      "main": [
+        [
+          {
+            "node": "Log Lead to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Lead to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Notify Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Me": {
+      "main": [
+        [
+          {
+            "node": "Generate Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Auto-Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Reply",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ed33aa7a-085f-4daa-bb79-e5f908fcdc60",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e528e00aca44db868f77fd57dbf046e65d157955ef78a7b5100ebefe846fcbf3"
+  },
+  "nodeGroups": [],
+  "id": "eIQa5Tw3XXWKsaFr",
+  "tags": []
+}
