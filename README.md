@@ -18,6 +18,7 @@ logs everything — with zero manual work.
 ## Workflow Diagram
 
 ![Workflow](screenshots/workflow-diagram.png)
+![Workflow](screenshots/lead_capture_automation_workflow.png)
 
 ## How It Works
 
