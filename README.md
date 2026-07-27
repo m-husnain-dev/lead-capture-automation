@@ -58,4 +58,4 @@ services. Available for custom implementation for businesses.
 ---
 
 Built by Husnain — AI Agency Developer  
-https://www.linkedin.com/in/muhammad-husnain-fareed/ | nainotech-solutions.lovable.app
+[LinkedIn](https://www.linkedin.com/in/muhammad-husnain-fareed/) | [Agency Website](https://nainotech-solutions.lovable.app)
